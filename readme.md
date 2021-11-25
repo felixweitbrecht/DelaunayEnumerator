@@ -1,4 +1,4 @@
-Given a set of points p1, p2, ..., pn, this (Java) program enumerates all Delaunay simplices and facets of all Delauny triangulations of all contiguous subsequences pi, pi+1, ..., pj.
+Given a set of points p1, p2, ..., pn, this (Java) program enumerates all Delaunay simplices and facets of all Delaunay triangulations of all contiguous subsequences pi, pi+1, ..., pj.
 
 Some example code is given in misc/DoSomething.java.
 
