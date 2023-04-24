@@ -3,6 +3,7 @@ package delaunayKD.triangulator;
 import java.util.ArrayList;
 import java.util.Stack;
 
+import delaunayKD.AllSimplicesFinder;
 import delaunayKD.geometry.AbstractSimplex;
 import delaunayKD.geometry.Facet;
 import delaunayKD.geometry.Point;
@@ -73,10 +74,13 @@ public class HoleTriangulator extends Triangulator {
 	private void createAndLinkNewBoundary(Point pNew, ArrayList<Face> oldBoundaryFaces,
 			ArrayList<Face> newBoundaryFaces) {
 		for (Face faceStar : newBoundaryFaces) {
-			// copy new boundary faces into star shape
+			// copy new boundary faces from star
 			Face faceHole = faceStar.clone();
 			faceStar.faceBoundary = faceHole;
 			faceHole.faceBoundary = faceStar;
+			if (AllSimplicesFinder.doAlphaBookkeeping) {
+				knownFaces.add(faceHole);
+			}
 
 			// for the ridges incident to pNew, if the adjacent boundary face
 			// already exists (if it will at all), link to it (back hull)
@@ -122,11 +126,11 @@ public class HoleTriangulator extends Triangulator {
 			}
 		}
 
-		// set hull links on ridges opposite pNew where star shape ends
+		// set hull links on ridges opposite pNew where star ends
 		for (Face faceStarOld : oldBoundaryFaces) {
 			for (int faceIdx = 0; faceIdx < DIM; faceIdx++) {
 				Face faceNeighborStar = faceStarOld.hNeighbors[faceIdx];
-				// did the star shape end here, and does it end here still?
+				// did the star end here, and does it end here still?
 				if (faceNeighborStar.hasVertex(pMid) && faceNeighborStar.r.simplex != faceStarOld.r.simplex) {
 					// (if it continued now, faceNeighborStar.r.simplex wouldn't
 					// have been updated to a new simplex involving pNew)
@@ -194,6 +198,9 @@ public class HoleTriangulator extends Triangulator {
 							// neighboring simplex was not created yet
 							// create the shared face now
 							faces[pIdx + 1] = faceAttaching.createFaceFacing(pNew, pIdx);
+							if (AllSimplicesFinder.doAlphaBookkeeping) {
+								knownFaces.add(faces[pIdx + 1]);
+							}
 						}
 						break;
 					}
@@ -215,6 +222,9 @@ public class HoleTriangulator extends Triangulator {
 						// create face shared with new facet on the new front
 						// hull
 						Face faceNew = faceAttaching.createFaceFacing(pNew, pIdx);
+						if (AllSimplicesFinder.doAlphaBookkeeping) {
+							knownFaces.add(faceNew);
+						}
 						faces[pIdx + 1] = faceNew;
 						newSimplices.add(new Facet(faceNew.r, getLastPreviousKillerIndex()));
 						faceNew.r.hLinkTo(faceHullNeighbor, pIdx);

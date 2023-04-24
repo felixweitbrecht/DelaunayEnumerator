@@ -18,6 +18,10 @@ public abstract class Triangulator {
 
 	// for exploration of destroyed simplices during point insertion
 	protected Stack<AbstractSimplex> simplicesToExplore = new Stack<AbstractSimplex>();
+	
+	// A list of all faces created by this triangulator
+	// Saves only one face of any face pair.
+	public ArrayList<Face> knownFaces = new ArrayList<Face>();
 
 	// destroys a simplex which has a new point in its circumsphere
 	protected void destroy(AbstractSimplex simplex, Point pNew) {

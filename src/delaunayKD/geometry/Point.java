@@ -3,7 +3,7 @@ package delaunayKD.geometry;
 import static delaunayKD.AllSimplicesFinder.DIM;
 
 import delaunayKD.triangulator.HoleTriangulator;
-import delaunayKD.triangulator.StarShape;
+import delaunayKD.triangulator.Star;
 
 public class Point {
 
@@ -18,7 +18,7 @@ public class Point {
 
 	// hole triangulator for the cavity resulting from the removal of this point
 	public HoleTriangulator ht;
-	public StarShape star;
+	public Star star;
 
 	public Point(double[] v, int i) {
 		this.v = v;

@@ -3,9 +3,12 @@ package delaunayKD.misc;
 import java.util.ArrayList;
 
 import delaunayKD.AllSimplicesFinder;
+import delaunayKD.AlphaFaceExtractor;
+import delaunayKD.alpha.QueryRectAlphaHalfFace;
 import delaunayKD.geometry.AbstractSimplex;
 import delaunayKD.geometry.Point;
 import delaunayKD.geometry.Simplex;
+import delaunayKD.triangulator.IncrementalTriangulator;
 
 public class DoSomething {
 
@@ -30,6 +33,20 @@ public class DoSomething {
 		// run another computation with 2D point set
 		ArrayList<Point> points2D = UtilityMethods.generatePointsSphere(1 << 12);
 		AllSimplicesFinder.findAllSimplices(points2D);
+
+		// compute the temporal alpha-shape
+		ArrayList<Point> pointsAlpha = UtilityMethods.generatePoints(1 << 12);
+		AllSimplicesFinder.doAlphaBookkeeping = true;
+		IncrementalTriangulator incTriangulator = new IncrementalTriangulator();
+		AllSimplicesFinder.findAllSimplices(pointsAlpha, incTriangulator);
+		ArrayList<QueryRectAlphaHalfFace> resultAlpha = AlphaFaceExtractor.extractAlphaFaces(incTriangulator,
+				pointsAlpha);
+		System.out.println("\tTemporal alpha-shape contains " + resultAlpha.size() + " cuboids for input set with "
+				+ pointsAlpha.size() + " points.");
+		AllSimplicesFinder.doAlphaBookkeeping = false;
+
+		// do something with the result
+		identifyAlphaFacesOfSubsequence(resultAlpha, 123, 456, 0.01);
 
 		System.out.println("\n" + "Code with benchmarks...");
 		System.out.println("Data will be printed with the following columns:" + "\n\t"
@@ -75,6 +92,22 @@ public class DoSomething {
 		}
 		System.out.println("\t" + "The Delaunay triangulation of the subsequence [" + startIndex + ", " + endIndex
 				+ "] contains " + count + " simplices and facets.");
+	}
+
+	// identify which faces are part of the alpha shape of the subsequence
+	// [startIndex, endIndex] for the given alpha-value.
+	// startIndex and endIndex are inclusive
+	private static void identifyAlphaFacesOfSubsequence(ArrayList<QueryRectAlphaHalfFace> alphaFaces, int startIndex,
+			int endIndex, double alpha) {
+		int count = 0;
+		for (QueryRectAlphaHalfFace q : alphaFaces) {
+			if (q.lowerMin < startIndex && q.lowerMax >= startIndex && q.upperMin <= endIndex && q.upperMax > endIndex
+					&& q.radiusMin <= alpha && q.radiusMax >= alpha) {
+				count++; // q.f is part of alpha-shape
+			}
+		}
+		System.out.println("\t" + "The alpha-shape of the subsequence [" + startIndex + ", " + endIndex + "] contains "
+				+ count + " alpha-faces for alpha-value " + alpha + ".");
 	}
 
 }

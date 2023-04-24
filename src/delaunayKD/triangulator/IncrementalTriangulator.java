@@ -2,6 +2,7 @@ package delaunayKD.triangulator;
 
 import java.util.ArrayList;
 
+import delaunayKD.AllSimplicesFinder;
 import delaunayKD.geometry.AbstractSimplex;
 import delaunayKD.geometry.Facet;
 import delaunayKD.geometry.Point;
@@ -33,6 +34,9 @@ public class IncrementalTriangulator extends Triangulator {
 					if (i == DIM - 1) {
 						// initialize with first face and 2 facets
 						Face faceNew = new Face(firstFacePoints);
+						if (AllSimplicesFinder.doAlphaBookkeeping) {
+							knownFaces.add(faceNew);
+						}
 						ArrayList<AbstractSimplex> newSimplices = new ArrayList<AbstractSimplex>(2);
 						newSimplices.add(new Facet(faceNew, getLastPreviousKillerIndex()));
 						newSimplices.add(new Facet(faceNew.r, getLastPreviousKillerIndex()));
@@ -71,10 +75,16 @@ public class IncrementalTriangulator extends Triangulator {
 						// neighboring new simplex is yet to be created, so we
 						// create the shared face now
 						faces[pIdx + 1] = faceBase.createFaceFacing(pNew, pIdx);
+						if (AllSimplicesFinder.doAlphaBookkeeping) {
+							knownFaces.add(faces[pIdx + 1]);
+						}
 					}
 				} else {
 					// face is shared with new facet, which we create now
 					Face faceNew = faceBase.createFaceFacing(pNew, pIdx);
+					if (AllSimplicesFinder.doAlphaBookkeeping) {
+						knownFaces.add(faceNew);
+					}
 					faces[pIdx + 1] = faceNew;
 					newSimplices.add(new Facet(faceNew.r, getLastPreviousKillerIndex()));
 					// find and set hull link

@@ -9,10 +9,13 @@ import delaunayKD.geometry.Point;
 import delaunayKD.geometry.Face;
 import delaunayKD.triangulator.HoleTriangulator;
 import delaunayKD.triangulator.IncrementalTriangulator;
-import delaunayKD.triangulator.StarShape;
+import delaunayKD.triangulator.Star;
 
 public class AllSimplicesFinder {
 	public static int DIM = 3;
+
+	// whether to do bookkeeping for computation of temporal alpha-shape
+	public static boolean doAlphaBookkeeping = false;
 
 	public static ArrayList<AbstractSimplex> findAllSimplices(ArrayList<Point> points) {
 		IncrementalTriangulator incTriangulator = new IncrementalTriangulator();
@@ -23,7 +26,7 @@ public class AllSimplicesFinder {
 	public static ArrayList<AbstractSimplex> findAllSimplices(ArrayList<Point> points,
 			IncrementalTriangulator incTriangulator) {
 		ArrayList<AbstractSimplex> allSimplices = new ArrayList<AbstractSimplex>();
-		// stack of simplices that need to be registered with star shapes
+		// stack of simplices that need to be registered with stars
 		Stack<AbstractSimplex> simplexStack = new Stack<AbstractSimplex>();
 
 		for (int pIdx = 0; pIdx < points.size(); pIdx++) {
@@ -33,18 +36,24 @@ public class AllSimplicesFinder {
 
 			Point pNew = points.get(pIdx);
 			new HoleTriangulator(pNew); // hole triangulator for new point
-			new StarShape(pNew); // star shape for new point
+			new Star(pNew); // star for new point
 
 			// insert point into incremental construction (row 0)
 			AbstractSimplex location = pIdx >= DIM ? locate(pNew, points.get(pIdx - DIM).star) : null;
 			ArrayList<AbstractSimplex> incrementalNewSimplices = incTriangulator.addPoint(pNew, location);
 			simplexStack.addAll(incrementalNewSimplices);
-			// work off stack, register simplices with star shapes and trigger
+			// work off stack, register simplices with stars and trigger
 			// updates for hole triangulations (rows >0)
 			while (!simplexStack.isEmpty()) {
 				AbstractSimplex simplex = simplexStack.pop();
 				allSimplices.add(simplex);
-				// trigger star shape/hole triangulation update
+				if (AllSimplicesFinder.doAlphaBookkeeping) {
+					// store simplex with its faces' lists of known simplices
+					for (Face f : simplex.faces) {
+						f.knownSimplices.add(simplex);
+					}
+				}
+				// trigger star/hole triangulation update
 				ArrayList<AbstractSimplex> moreSimplices = simplex.minPoint().star.registerSimplex(simplex, pNew);
 				simplexStack.addAll(moreSimplices);
 			}
@@ -54,10 +63,10 @@ public class AllSimplicesFinder {
 		return allSimplices;
 	}
 
-	// given the star shape of p_(new-DIM), locate pNew in the incremental
+	// given the star of p_(new-DIM), locate pNew in the incremental
 	// construction. returns a simplex of the incremental construction which
 	// contains pNew in its circumsphere.
-	public static AbstractSimplex locate(Point pNew, StarShape star) {
+	public static AbstractSimplex locate(Point pNew, Star star) {
 		AbstractSimplex destroyedSimplex = (star.faceLatest.facesPoint(pNew) ? star.faceLatest
 				: star.faceLatest.r).simplex.original;
 		// loop: based on a destroyed hole triangulation simplex, find a
@@ -88,10 +97,10 @@ public class AllSimplicesFinder {
 			}
 			AbstractSimplex.unmarkAll();
 
-			// find a destroyed simplex in the corresponding star shape
+			// find a destroyed simplex in the corresponding star
 			AbstractSimplex destroyedSimplexStar = null;
 			// try finding an old boundary face (that would give us a destroyed
-			// star shape simplex)
+			// star simplex)
 			for (int i = 0; i < destroyedSimplices.size() && destroyedSimplexStar == null; i++) {
 				AbstractSimplex simplex = destroyedSimplices.get(i);
 				for (Face face : simplex.faces) {
@@ -103,7 +112,7 @@ public class AllSimplicesFinder {
 				}
 			}
 			// no success? look at facets and see if they have a corresponding
-			// destroyed facet in the star shape
+			// destroyed facet in the star
 			for (int i = 0; i < destroyedSimplices.size() && destroyedSimplexStar == null; i++) {
 				AbstractSimplex simplex = destroyedSimplices.get(i);
 				if (simplex instanceof Facet) {
@@ -114,7 +123,7 @@ public class AllSimplicesFinder {
 						Face faceNeighbor = face.hNeighbors[faceIdx];
 						if (faceNeighbor.simplex == null) {
 							// faceNeighbor is a boundary face
-							// look at adjacent facet in the star shape
+							// look at adjacent facet in the star
 							AbstractSimplex starFacet = faceNeighbor.faceBoundary.hNeighbors[faceNeighbor
 									.pointOppositeIndex(face, pOpposite)].simplex;
 							if (starFacet.containsPointInCircumsphere(pNew)) {

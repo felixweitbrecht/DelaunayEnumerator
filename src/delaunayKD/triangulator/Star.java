@@ -11,24 +11,24 @@ import delaunayKD.geometry.Simplex;
 
 import static delaunayKD.AllSimplicesFinder.DIM;
 
-public class StarShape {
+public class Star {
 	// point in the middle
 	public Point pMid;
 
-	// state information of ongoing star shape updates
+	// state information of ongoing star updates
 	private ArrayList<AbstractSimplex> registeredSimplices = new ArrayList<AbstractSimplex>();
 	private int unmatchedFaces = 0; // currently known unmatched faces
 	public Face faceLatest = null; // the newest star face
 	private Simplex simplexLatest = null; // some simplex from the last update
 											// (original instance)
 
-	public StarShape(Point pMid) {
+	public Star(Point pMid) {
 		this.pMid = pMid;
 		pMid.star = this;
 	}
 
-	// registers a new simplex of the star shape. if now all new simplices are
-	// known, the star shape and hole triangulation are updated and new
+	// registers a new simplex of the star. if now all new simplices are
+	// known, the star and hole triangulation are updated and new
 	// simplices found in the hole triangulation are returned
 	public ArrayList<AbstractSimplex> registerSimplex(AbstractSimplex newSimplex, Point pNew) {
 		registeredSimplices.add(newSimplex);
@@ -44,7 +44,7 @@ public class StarShape {
 			} else {
 				ArrayList<AbstractSimplex> destroyedSimplices = findDestroyedSimplices(simplexLatest, pNew);
 				ArrayList<Face> oldBoundaryFaces = findOldBoundaryFaces(destroyedSimplices);
-				ArrayList<Face> newBoundaryFaces = updateStarShape(pNew, destroyedSimplices);
+				ArrayList<Face> newBoundaryFaces = updateStar(pNew, destroyedSimplices);
 				holeTriangulationSimplices = pMid.ht.update(pNew, oldBoundaryFaces, newBoundaryFaces);
 			}
 			registeredSimplices.clear();
@@ -79,11 +79,11 @@ public class StarShape {
 		return existingFaces - newFaces;
 	}
 
-	// inserts all new simplices into the star shape
-	private ArrayList<Face> updateStarShape(Point pNew, ArrayList<AbstractSimplex> destroyedSimplices) {
+	// inserts all new simplices into the star
+	private ArrayList<Face> updateStar(Point pNew, ArrayList<AbstractSimplex> destroyedSimplices) {
 		ArrayList<Facet> newFacets = new ArrayList<Facet>();
 		ArrayList<Face> newBoundaryFaces = new ArrayList<Face>();
-		// clone all new simplices into star shape
+		// clone all new simplices into star
 		for (AbstractSimplex simplex : registeredSimplices) {
 			if (simplex instanceof Simplex) {
 				Face[] faces = new Face[DIM + 1];

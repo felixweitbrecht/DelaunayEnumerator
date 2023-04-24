@@ -17,7 +17,7 @@ public abstract class AbstractSimplex {
 	public int lastPreviousKillerIndex; // known at time of creation
 	public int firstSubsequentKillerIndex = Integer.MAX_VALUE;
 
-	// in star shapes: reference to original simplex copied into the star shape
+	// in stars: reference to original simplex copied into the star
 	public AbstractSimplex original;
 
 	public AbstractSimplex(int lastPreviousKillerIndex) {

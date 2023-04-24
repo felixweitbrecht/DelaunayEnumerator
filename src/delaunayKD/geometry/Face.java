@@ -14,7 +14,7 @@ public class Face {
 	// store a reference to the simplex attached to the respective side of that
 	// face, allowing navigation between neighboring simplices.
 
-	// In hole triangulations and star shapes, we call boundary faces those
+	// In hole triangulations and stars, we call boundary faces those
 	// sides of hull faces which do not face the point in the middle, i.e. the
 	// outside sides of hull faces.
 
@@ -32,7 +32,7 @@ public class Face {
 	// Convention: neighbor across ridge opposite point i is stored at index i.
 	public Face hNeighbors[] = new Face[DIM];
 
-	// Pointers on boundary faces between corresponding instances in star shapes
+	// Pointers on boundary faces between corresponding instances in stars
 	// and hole triangulations, used for point location
 	public Face faceBoundary;
 
@@ -43,6 +43,11 @@ public class Face {
 	// for search algorithms
 	private boolean marked = false;
 	private static ArrayList<Face> markedFaces = new ArrayList<Face>();
+
+	// List of Delaunay simplices to have existed adjacent to this face
+	// instance, sorted by highest index point of simplex. Only includes
+	// simplices that belonged to the corresponding triangulation.
+	public ArrayList<AbstractSimplex> knownSimplices= new ArrayList<AbstractSimplex>();
 
 	// constructors ensuring uniqueFace is always passed on properly
 	public Face(Point[] points) {
@@ -120,9 +125,13 @@ public class Face {
 
 	// orientation test
 	public boolean facesPoint(Point q) {
+		return facesPoint(q.v);
+	}
+
+	// orientation test
+	public boolean facesPoint(double[] qVals) {
 		// www.cs.cmu.edu/~quake/robust.html
 		Point[] points = points();
-		double[] qVals = q.v;
 		double[] matrix = new double[DIM * DIM];
 		for (int row = 0; row < DIM; row++) {
 			double[] vals = points[row].v;
@@ -133,6 +142,7 @@ public class Face {
 		return isReverse ^ (UtilityMethods.det(matrix, DIM) > 0.0);
 	}
 
+	
 	// whether the simplex created from pTop and this face (must be facing pTop)
 	// contains q in its circumsphere
 	public boolean simplexContainsPointInCircumsphere(Point pTop, Point q) {
@@ -184,8 +194,8 @@ public class Face {
 		return -1;
 	}
 
-	// returns this face's corresponding instance in the appropriate star
-	// shape, null if it doesn't exist
+	// returns this face's corresponding instance in the appropriate star, null
+	// if it doesn't exist
 	public Face faceStar() {
 		Face faceStar = uniqueFace.faceStar;
 		if (faceStar != null && isReverse) {

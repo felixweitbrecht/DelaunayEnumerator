@@ -11,7 +11,7 @@ import delaunayKD.geometry.AbstractSimplex;
 import delaunayKD.geometry.Point;
 import delaunayKD.triangulator.HoleTriangulator;
 import delaunayKD.triangulator.IncrementalTriangulator;
-import delaunayKD.triangulator.StarShape;
+import delaunayKD.triangulator.Star;
 
 public class Benchmarks {
 
@@ -50,7 +50,7 @@ public class Benchmarks {
 			}
 			Point pNew = points.get(pIdx);
 			new HoleTriangulator(pNew); // hole triangulator for new point
-			new StarShape(pNew); // star shape for new point
+			new Star(pNew); // star for new point
 
 			// insert point into incremental construction (row 0)
 			AbstractSimplex loc = pIdx >= DIM ? AllSimplicesFinder.locate(pNew, points.get(pIdx - DIM).star) : null;
@@ -60,7 +60,7 @@ public class Benchmarks {
 			while (!simplexStack.isEmpty()) {
 				AbstractSimplex simplex = simplexStack.pop();
 				allSimplices.add(simplex);
-				// trigger star shape/hole triangulation update
+				// trigger star/hole triangulation update
 				ArrayList<AbstractSimplex> moreSimplices = simplex.minPoint().star.registerSimplex(simplex, pNew);
 				simplexStack.addAll(moreSimplices);
 			}
